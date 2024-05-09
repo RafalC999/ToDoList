@@ -1,0 +1,18 @@
+﻿@using TodoList.DAL.Entities;
+
+<div>
+    <CascadingValue Value="this">
+        @ChildContent
+    </CascadingValue>
+</div>
+@code {
+    [Parameter]
+    public List<UserTask> UserTasks { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public EventCallback<UserTask> OnStatusUpdated { get; set; }
+
+    public UserTask Payload { get; set; }
+
+}

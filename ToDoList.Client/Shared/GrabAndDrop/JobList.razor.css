@@ -1,0 +1,45 @@
+﻿.job-status {
+    display: flex;
+    flex-direction: column;
+    width: 462px;
+}
+
+    .job-status ul {
+        flex: 1;
+    }
+
+.dropzone {
+    padding: 15px;
+    border: 2px dashed #75868a;
+    border-radius: 3px;
+    list-style: none;
+}
+.no-drop {
+    border: 3px dashed red;
+    background-image: linear-gradient(red, yellow);
+    opacity: 0.3;
+}
+
+.can-drop {
+    border: 3px dashed green;
+    background-image: linear-gradient(green, yellow);
+    opacity: 0.3;
+}
+
+.statusHeader {
+    font-size: 40px;
+    font-family: 'Times New Roman';
+    text-align: center;
+}
+
+.ToDo {
+    text-shadow: 2px 2px 5px blue;
+}
+
+.InProgress {
+    text-shadow: 2px 2px 5px orange;
+}
+
+.Completed {
+    text-shadow: 2px 2px 5px green;
+}

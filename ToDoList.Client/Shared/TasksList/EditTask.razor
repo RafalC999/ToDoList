@@ -1,0 +1,67 @@
+﻿@using BlazorStrap;
+@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+<BSOffCanvas @ref="refCanvasTask" DataId="@TargetId" Placement="Placement.Bottom">
+    <Header><h3 class="mb-0">Nowe zadanie</h3></Header>
+    <Content>
+        <BSForm Model="InputTask" OnValidSubmit="@(async () => {await EditTaskClick(InputTask);await Reload.InvokeAsync();})">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Nazwa</span>
+                <BSInput InputType="InputType.Text" @bind-Value="InputTask.Name" placeholder="Nazwa">
+
+                </BSInput>
+
+                <span class="input-group-text">Termin</span>
+                <span>
+                    <BSInput InputType="InputType.Date" @bind-Value="InputTask.Deadline" class="date" />
+                </span>
+            </div>
+            <div class="mb-2">
+                <BSLabel><h4>Opis</h4></BSLabel>
+                <BSInput InputType="InputType.TextArea" @bind-Value="InputTask.Description" />
+            </div>
+
+            <div class="mb-1 float-sm-end">
+                <BSButton Target="offCanvasTask">Anuluj</BSButton>
+                <BSButton IsSubmit="true" Color="BSColor.Primary">Zapisz</BSButton>
+            </div>
+        </BSForm>
+    </Content>
+</BSOffCanvas>
+
+@code {
+
+    [Inject]
+    private IToDoService toDoService { get; set; }
+
+    public BSOffCanvas? refCanvasTask { get; set; }
+    [Parameter]
+    public UserTask Task { get; set; }
+    [Parameter]
+    public string TargetId { get; set; }
+    [Parameter]
+    public EventCallback Reload { get; set; }
+    [Parameter]
+    public UserTask InputTask { get; set; } = new UserTask();
+
+    private DateOnly DateOnlyValue { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+    private string Description { get; set; }
+
+    private async Task EditTaskClick(UserTask request)
+    {
+        await toDoService.OnEditTask(request);
+        await OnInitializedAsync();
+        StateHasChanged();
+        await Close();
+    }
+
+    private async Task Close()
+    {
+        if (refCanvasTask != null)
+        {
+            await refCanvasTask.HideAsync();
+        }
+    }
+
+}

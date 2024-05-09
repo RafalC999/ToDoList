@@ -1,0 +1,33 @@
+﻿@using TodoList.DAL.Entities;
+
+<div class="jobs-container">
+    <CascadingValue Value="this">
+        @ChildContent
+    </CascadingValue>
+</div>
+
+@code {
+    [Parameter]
+    public List<SubTask> Jobs { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<SubTask> OnStatusUpdated { get; set; }
+
+    public SubTask Payload { get; set; }
+
+
+    public async Task UpdateJobAsync(SubtaskStatus newStatus)
+    {
+        var task = Jobs.SingleOrDefault(x => x.Id == Payload.Id);
+
+        if (task != null)
+        {
+            task.Status = newStatus;
+            await OnStatusUpdated.InvokeAsync(Payload);
+        }
+    }
+
+}

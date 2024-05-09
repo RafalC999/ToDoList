@@ -1,0 +1,211 @@
+﻿@using BlazorStrap;
+@using IdentityModel.Client;
+@using Microsoft.AspNetCore.Mvc;
+@using Newtonsoft.Json;
+@using ToDoList.Client.Services;
+@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+
+<BSTR Color="@SetColorBackground(subtask)">
+    <BSTD AlignRow="AlignRow.Middle">
+        <h5>@subtask.Order.</h5>
+    </BSTD>
+
+    <BSTD>
+        <BSInputCheckbox MarginTop="Margins.Small" @ref="subtaskReferences[subtask.Id]" CheckedValue="true" @bind-Value="subtask.IsDone" @onchange="@(async() =>{await SubtaskDone(subtask);})"
+                         IsDisabled="subtask.IsDone" MarginLeftAndRight="Margins.Small" />
+    </BSTD>
+
+    <BSTD>
+        <ContextMenuTrigger MenuId="myMenu" Data="subtask">
+            <BSForm Model="InputSubtask" OnValidSubmit=@(async() => {await EditSubtask(subtask);})>
+                @if (subtaskReferences[subtask.Id].IsReadonly && subtask.IsDone == false)
+                {
+                    <BSInput @ref="subtaskInputReferences[subtask.Id]"
+                             InputType="InputType.Text" @bind-Value="@subtask.Name" IsPlainText=true IsDisabled=subtask.IsDone
+                             IsReadonly=!subtaskReferences[subtask.Id].IsReadonly
+                             style="padding-left: 5px;"
+                    @onblur=@(async() => {await EditSubtask(subtask);})>
+                    </BSInput>
+                }
+                else
+                {
+                    <div style="margin-top:5px;">@subtask.Name</div>
+                }
+
+
+            </BSForm>
+        </ContextMenuTrigger>
+    </BSTD>
+
+    <BSTD AlignRow="AlignRow.Middle">
+        @DateOnly.FromDateTime(subtask.Deadline)
+    </BSTD>
+
+    <BSTD>
+        <span class="subtaskButton">
+            <BSButton IsOutlined="true" Color="BSColor.Primary" class="oi oi-chevron-top"
+            @onclick="(async ()=> {await Up(task, subtask); await Reload.InvokeAsync();})"></BSButton>
+        </span>
+        <span class="subtaskButton">
+            <BSButton IsOutlined="true" Color="BSColor.Secondary" class="oi oi-chevron-bottom"
+            @onclick="(async ()=> {await Down(task, subtask); await Reload.InvokeAsync();})"></BSButton>
+        </span>
+    </BSTD>
+
+    <BSTD>
+        <span class="input-group-sm subtaskButton">
+            <BSButton IsOutlined="true" Color="BSColor.Warning" DataId="@subtask.Name" @onclick="(()=> {Index(task, subtask);})">Info</BSButton>
+            <BSPopover Placement="Placement.Left" Target="@subtask.Name">
+                <Header>
+                    <div><b>Created by:</b> @task.CreatedById</div>
+                    <div><b>On:</b> @task.CreateOn</div>
+                </Header>
+                <Content>
+                    <div><b>Modified by:</b> @task.ModifiedById</div>
+                    <div><b>On:</b> @task.ModifiedOn</div>
+                </Content>
+            </BSPopover>
+        </span>
+    </BSTD>
+</BSTR>
+
+
+@code {
+
+    [Inject] private HttpClient HttpClient { get; set; }
+    [Inject] private IConfiguration Config { get; set; }
+    [Inject] private ITokenService TokenServices { get; set; }
+    [Inject] private IToDoService toDoService { get; set; }
+
+    [CascadingParameter]
+    TaskContainer container { get; set; }
+
+    [Parameter]
+    public UserTask task { get; set; }
+    [Parameter]
+    public SubTask subtask { get; set; }
+
+    [Parameter]
+    public UserTask InputTask { get; set; }
+    [Parameter]
+    public SubTask InputSubtask { get; set; }
+
+    [Parameter]
+    public Dictionary<Guid, BSInputCheckbox<bool>> subtaskReferences { get; set; }
+    [Parameter]
+    public Dictionary<Guid, BSInput<string>> subtaskInputReferences { get; set; }
+
+    [Parameter]
+    public EventCallback Reload { get; set; }
+
+    private async Task SubtaskDone(SubTask subtask)
+    {
+        if (subtask.IsDone)
+        {
+            subtaskInputReferences[subtask.Id].IsDisabled = true;
+            subtask.IsDone = true;
+            subtask.Status = SubtaskStatus.Completed;
+
+            await toDoService.OnEditSubtask(subtask);
+        }
+    }
+
+    private async Task EditSubtask(SubTask subtask)
+    {
+        if (!subtaskInputReferences[subtask.Id].IsReadonly)
+        {
+            subtask.Name = subtaskInputReferences[subtask.Id].Value;
+            subtaskReferences[subtask.Id].IsReadonly = false;
+
+            await OnInitializedAsync();
+            await toDoService.OnEditSubtask(subtask);
+        }
+    }
+
+
+    private async Task PostSubtaskClick(UserTask request, SubTask inputSubtask)
+    {
+        await toDoService.OnPostSubtask(request, inputSubtask);
+        await OnInitializedAsync();
+        InputSubtask.Name = string.Empty;
+        StateHasChanged();
+    }
+
+    async void DeleteClick(ItemClickEventArgs e)
+    {
+        var currentSubtask = e.Data as SubTask;
+        await toDoService.OnDeleteSubtask(currentSubtask!);
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private BSColor SetColorBackground(SubTask subtask)
+    {
+        if (subtask.IsDone)
+        {
+            return BSColor.Success;
+        }
+        else if (subtask.Status == SubtaskStatus.InProgress)
+        {
+            return BSColor.Primary;
+        }
+        else
+        {
+            return BSColor.Default;
+        }
+    }
+
+
+    private async Task Up(UserTask task, SubTask subTask)
+    {
+        int currentItemIndex = subTask.Order;
+        var nextItem = task.SubTasks.OrderBy(o => o.Order).TakeWhile(x => x.Order < currentItemIndex).Last();
+        var test = task.SubTasks;
+        if (nextItem != null)
+        {
+            int differenceIndex = currentItemIndex - nextItem.Order;
+            if (differenceIndex == 1)
+            {
+                nextItem.Order++;
+                subTask.Order--;
+            }
+            else
+            {
+                subTask.Order -= differenceIndex;
+                nextItem.Order = subTask.Order + 1;
+            };
+            await toDoService.OnEditSubtask(subTask);
+            await toDoService.OnEditSubtask(nextItem);
+        }
+    }
+
+    private async Task Down(UserTask task, SubTask subTask)
+    {
+        int currentItemIndex = subTask.Order;
+        var PreviousItem = task.SubTasks.OrderByDescending(d => d.Order).TakeWhile(x => x.Order > currentItemIndex).OrderBy(a => a.Order).First();
+        var test = task.SubTasks;
+        if (PreviousItem != null)
+        {
+            int differenceIndex = PreviousItem.Order - currentItemIndex;
+            if (differenceIndex == 1)
+            {
+                PreviousItem.Order--;
+                subTask.Order++;
+            }
+            else
+            {
+                subTask.Order += differenceIndex;
+                PreviousItem.Order = subTask.Order - 1;
+            };
+            await toDoService.OnEditSubtask(subTask);
+            await toDoService.OnEditSubtask(PreviousItem);
+        }
+    }
+
+    private async Task Index(UserTask task, SubTask subTask)
+    {
+        var currentIndex = subTask.Order;
+        Console.WriteLine(currentIndex);
+    }
+}

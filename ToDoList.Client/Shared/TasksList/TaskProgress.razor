@@ -1,0 +1,32 @@
+﻿@using BlazorStrap;
+@using TodoList.DAL.Entities;
+
+<div class="progressTaskBar">
+    <BSProgress style="height:1.75em">
+        <BSProgressBar Color="BSColor.Primary" IsStriped=true Value="CalculateProgress(selectedTask)">@CalculateProgress(selectedTask)%</BSProgressBar>
+    </BSProgress>
+</div>
+
+
+
+
+@code {
+    [Parameter]
+    public UserTask selectedTask { get; set; }
+
+
+
+    public int CalculateProgress(UserTask selectedTask)
+    {
+        var doneSubtasks = selectedTask.SubTasks.Where(x => x.IsDone).Count();
+        var allSubtasks = selectedTask.SubTasks.Count();
+        if (allSubtasks != 0)
+        {
+            return (doneSubtasks * 100 / allSubtasks);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}

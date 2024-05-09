@@ -1,0 +1,62 @@
+﻿@using BlazorStrap;
+@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+
+
+<div Class="input-group">
+    <span class="input-group-sm">
+        <h3>@task.Name</h3>
+    </span>
+</div>
+
+<span class="info">
+    <BSBadge Class="text-dark info" style="background-color:coral">
+        <h4>Added by</h4>
+        <div>
+            <h5>
+                <BSBadge Color="BSColor.Secondary">@user.UserName</BSBadge>
+            </h5>
+        </div>
+    </BSBadge>
+</span>
+
+<span class="info">
+    <BSBadge Color="BSColor.Info" Class="text-dark info">
+        <h4>Deadline</h4>
+        <div>
+            <h5>
+                <BSBadge Color="BSColor.Primary">@DateOnly.FromDateTime(task.Deadline)</BSBadge>
+            </h5>
+        </div>
+    </BSBadge>
+</span>
+
+<span>
+    <BSButton Target="@task.Id.ToString()" Color="BSColor.Warning" class="oi oi-pencil" style="margin-right:10px; margin-bottom:5px; height:40px; width:40px" @onclick="(()=> {Index(task);})"></BSButton>
+    <BSButton Color="BSColor.Danger" @onclick="(async() => {await toDoService.OnDeleteTask(task); await Reload.InvokeAsync();})" class="oi oi-trash" style="margin-right:20px; height:40px; width:40px;"></BSButton>
+</span>
+
+<EditTask TargetId="@task.Id.ToString()" InputTask="@task"></EditTask>
+
+
+@code {
+    [Inject] private IToDoService toDoService { get; set; }
+    [Inject] private IUserService userService { get; set; }
+    [Parameter]
+    public UserTask task { get; set; }
+    [Parameter]
+    public EventCallback Reload { get; set; }
+
+    public ApplicationUser user = new ApplicationUser();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await userService.GetUser(task.CreatedById);
+    }
+
+    private async Task Index(UserTask task)
+    {
+        var currentIndex = task.Name;
+        Console.WriteLine(currentIndex);
+    }
+}

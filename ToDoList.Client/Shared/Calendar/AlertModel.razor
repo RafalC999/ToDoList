@@ -1,0 +1,96 @@
+﻿@using BlazorStrap;
+@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+
+<div class="eventBox" onclick="@OpenModal">
+    <span># </span>
+    <span>@InputSubtask.Name</span>
+</div>
+
+
+<BSModal @ref="bsModal" IsCentered="true" DataId="bsModal">
+    <Header>
+        <div class="header">
+            <span class="dot"></span>
+            <span class="name">
+                @Usertask.Name
+            </span>
+
+            @if (Usertask.SubTasks != null)
+            {
+                <span class="count">
+                    @InputSubtask.Order <b>/@Usertask.SubTasks.Count()</b>
+                </span>
+            }
+        </div>
+
+    </Header>
+    <Content>
+
+
+    </Content>
+    <Content>
+
+        <div class="content">
+            @InputSubtask.Name
+        </div>
+
+        <div class="content">
+            <span>
+                <b>Status:</b>
+            </span>
+            <span>
+                @InputSubtask.Status
+            </span>
+            <span>
+                <b>
+                    Created by:
+                </b>
+                <span>
+                    @user.UserName
+                </span>
+            </span>
+        </div>
+
+    </Content>
+    <Footer Context="modal">
+        <span>
+            <b>Deadline:</b>
+        </span>
+        <span>
+            @DateOnly.FromDateTime(InputSubtask.Deadline)
+        </span>
+        <BSButton MarginStart="Margins.Auto" Color="BSColor.Secondary" @onclick="modal.HideAsync">Close</BSButton>
+    </Footer>
+</BSModal>
+
+@code {
+    [Inject] private IToDoService toDoService { get; set; }
+    [Inject] private IUserService userService { get; set; }
+    [Parameter]
+    public SubTask? InputSubtask { get; set; }
+
+    public UserTask? Usertask = new UserTask();
+
+    public BSModal? bsModal { get; set; }
+
+    public List<UserTask> UserTasks = new();
+
+    public ApplicationUser user = new ApplicationUser();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserTasks = await toDoService.GetTaskListAsync();
+        Usertask = UserTasks.FirstOrDefault(x => x.Id == InputSubtask.UserTaskId);
+
+        user = await userService.GetUser(Usertask.CreatedById);
+    }
+
+    public void OpenModal()
+    {
+        Console.WriteLine(InputSubtask.Name);
+        bsModal.ShowAsync();
+
+    }
+}

@@ -1,0 +1,39 @@
+﻿@using BlazorStrap;
+@using Microsoft.AspNetCore.Mvc;
+@using ToDoList.Client.Pages;
+@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+
+<div Class="input-group" style="margin-top:20px; margin-bottom:20px; height:10px">
+
+    <BSInput InputType="InputType.Text" placeholder="New subtask" @bind-Value="@InputSubtask.Name" class="form-control-sm" />
+    <span class="input-group-sm">
+        <BSInput InputType="InputType.Date" @bind-Value="DateValue" style="width:auto" />
+    </span>
+    <span class="input-group-sm">
+        <BSButton @onclick="(async()=> {await PostSubtaskClick(taskValue); await parentFunction.InvokeAsync();})" class="btn btn-primary">Add</BSButton>
+    </span>
+</div>
+
+@code {
+    [Inject] private IToDoService toDoService { get; set; }
+
+    [BindProperty]
+    public SubTask InputSubtask { get; set; } = new SubTask();
+
+    [Parameter]
+    public UserTask taskValue { get; set; }
+    [Parameter]
+    public EventCallback parentFunction { get; set; }
+
+    private DateTime DateValue { get; set; } = DateTime.Now;
+
+    private async Task PostSubtaskClick(UserTask request)
+    {
+        InputSubtask.Deadline = DateValue;
+        await toDoService.OnPostSubtask(request, InputSubtask);
+        InputSubtask.Name = string.Empty;
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,108 @@
+﻿@using BlazorStrap;
+@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+<h3>CalendarModel</h3>
+<BSInput InputType="InputType.Month" @bind-Value="date" />
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            @foreach (var day in week)
+            {
+                <th class="header">
+                    @day
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 1; i < Index();)
+        {
+            <tr class="week">
+                @for (int j = 0; j < 7; j++, i++)
+                {
+                    <td class="number">
+
+                        @if (Subtasks.Where(x => x.Deadline.Day == days).Any()
+                       && Subtasks.Where(x => x.Deadline.Month == date.Month).Any()
+                       && Subtasks.Where(x => x.Deadline.Year == date.Year).Any()
+                       )
+                        {
+                            <div class="container smallNumber">
+                                @CheckDay(i)
+                            </div>
+                            foreach (var alert in Subtasks.Where(x => x.Deadline.Day == days-1))
+                            {
+
+                                <AlertModel InputSubtask="alert"></AlertModel>
+                            }
+                        }
+                        else
+                        {
+                            <span class="container largeNumber">
+                                @CheckDay(i)
+                            </span>
+
+                        }
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+@code {
+    [Inject] private IToDoService toDoService { get; set; }
+    string[] week = new string[7] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+    public DateOnly date = DateOnly.FromDateTime(DateTime.Now);
+    public int? days = null;
+    public string? dayNumberStyle;
+
+
+    public List<UserTask> UserTasks = new();
+    public List<SubTask> Subtasks = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserTasks = await toDoService.GetTaskListAsync();
+        Subtasks = await toDoService.GetSubtaskListAsync();
+
+    }
+
+    public int? CheckDay(int i)
+    {
+        if (i >= (FirstDayIndex() + 1) && i < Index())
+        {
+            if (days == null)
+            {
+                days = 1;
+            }
+            var currentDay = days;
+            days++;
+            return currentDay;
+        }
+        else
+        {
+            days = null;
+            return days;
+        }
+    }
+
+    public int Index()
+    {
+        var daysNumber = DateTime.DaysInMonth(date.Year, date.Month);
+        var index = FirstDayIndex() + daysNumber + 1;
+
+        return index;
+    }
+
+    public int FirstDayIndex()
+    {
+        var month = new DateOnly(date.Year, date.Month, 1);
+        var firstDayOfMonth = month.DayOfWeek.ToString();
+        int index = Array.FindIndex(week, r => r.Contains(firstDayOfMonth));
+
+        return index;
+    }
+}

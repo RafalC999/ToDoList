@@ -1,0 +1,13 @@
+﻿body {
+}
+
+.info{
+    margin-right:1em;
+    margin-bottom:0,2em;
+}
+
+#button BSbutton {
+    margin-right:5px;
+    height:40px;
+    width:40px;
+}

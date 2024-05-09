@@ -1,0 +1,22 @@
+﻿body {
+}
+
+button {
+    align-self: center;
+    align-items: center;
+    align-content: center;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.subtaskButton {
+    margin-left: 2px;
+    margin-right: 2px;
+    height:25px;
+}
+.date {
+    align-self:center;
+    margin-right: 5px;
+    margin-left: 1em;
+    background-color:gainsboro;
+}

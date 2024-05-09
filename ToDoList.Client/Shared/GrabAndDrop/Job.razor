@@ -1,0 +1,21 @@
+﻿@using TodoList.DAL.Entities;
+
+<li class="draggable" draggable="true" title="@Subtask.Name" @ondragstart="@(() => HandleDragStart(Subtask))">
+   
+    <p class="description">@Subtask.Name</p>
+    
+    <p class="last-updated"><small>Last Updated</small> </p>
+</li>
+
+@code {
+    [CascadingParameter]
+    JobsContainer Container { get; set; }
+
+    [Parameter]
+    public SubTask Subtask { get; set; }
+
+    private void HandleDragStart(SubTask selectedSubtask)
+    {
+        Container.Payload = selectedSubtask;
+    }
+}

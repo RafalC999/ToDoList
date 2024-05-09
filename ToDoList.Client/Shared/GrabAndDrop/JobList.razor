@@ -1,0 +1,87 @@
+﻿@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+
+<div class="job-status">
+
+    <h3 class="statusHeader @Style">@ListStatus (@Jobs.Count()) </h3> 
+    <ul class="dropzone @dropClass"
+        ondragover="event.preventDefault();"
+        ondragstart="event.dataTransfer.setData('', event.target.id);"
+    @ondrop="HandleDrop"
+    @ondragenter="HandleDragEnter"
+    @ondragleave="HandleDragLeave">
+        @foreach (var job in Jobs)
+        {
+            <Job Subtask="job" />
+        }
+    </ul>
+</div>
+
+@code {
+    [Inject] private IToDoService? toDoService { get; set; }
+
+    [CascadingParameter]
+    JobsContainer Container { get; set; }
+
+    [Parameter]
+    public SubtaskStatus ListStatus { get; set; }
+
+    [Parameter]
+    public SubtaskStatus[] AllowedStatuses { get; set; }
+    [Parameter]
+    public string? Style { get; set; }
+
+    List<SubTask> Jobs = new List<SubTask>();
+
+    string dropClass = "";
+
+    protected override void OnParametersSet()
+    {
+        Jobs.Clear();
+        Jobs.AddRange(Container.Jobs.Where(x => x.Status == ListStatus));
+    }
+
+    private void HandleDragEnter()
+    {
+        if (ListStatus == Container.Payload.Status) return;
+
+        if (AllowedStatuses != null && !AllowedStatuses.Contains(Container.Payload.Status))
+        {
+            dropClass = "no-drop";
+            Console.WriteLine(Container.Payload.Name);
+        }
+        else
+        {
+            Console.WriteLine("T");
+            dropClass = "can-drop";
+        }
+    }
+
+    private void HandleDragLeave()
+    {
+        dropClass = "";
+    }
+
+    private async Task HandleDrop()
+    {
+        dropClass = "";
+
+        if (AllowedStatuses != null && !AllowedStatuses.Contains(Container.Payload.Status))
+        {
+            return;
+        }
+        else
+        {
+            await Container.UpdateJobAsync(ListStatus);
+            if(Container.Payload.Status != SubtaskStatus.Completed)
+            {
+                Container.Payload.IsDone = false;
+            }
+            else
+            {
+                Container.Payload.IsDone = true;
+            }
+            await toDoService.OnEditSubtask(Container.Payload);
+        }            
+    }
+}

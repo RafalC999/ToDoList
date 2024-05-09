@@ -1,0 +1,23 @@
+﻿@using BlazorStrap;
+@using TodoList.DAL.Entities;
+@* <BSButton Color="BSColor.Primary" >TEST</BSButton>
+
+<BSModal @ref="bsModal" IsCentered="true" DataId="bsModal">
+    <Header>Modal Title</Header>
+    <Content>
+        @InputSubtask.Name
+    </Content>
+    <Footer Context="modal">
+        <BSButton MarginStart="Margins.Auto" Color="BSColor.Secondary" @onclick="modal.HideAsync">Close</BSButton>
+    </Footer>
+</BSModal>
+
+
+@code {
+    [Parameter]
+    public SubTask? InputSubtask { get; set; }
+    public BSModal? bsModal { get; set; }
+  
+
+
+} *@

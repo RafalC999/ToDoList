@@ -1,0 +1,45 @@
+﻿.eventBox {
+    font-size: 20px;
+    text-align: left;
+    margin-bottom: 5px;
+    border: 1px solid #424d5c;
+    cursor: help;
+    background: rgba(76, 175, 80, 0.3);
+    color: black;
+    border-radius: 3px;
+    vertical-align:central;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.dot {
+    height: 18px;
+    width: 18px;
+    background-color: orangered;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right:20px;
+}
+.content {
+    text-align: left;
+}
+
+
+.header{
+    width:100%;
+}
+
+.dot{
+    float: left;
+    vertical-align:central;
+}
+.name{
+    float: left;
+}
+.count{
+    float:right;
+    margin-right:20px;
+}

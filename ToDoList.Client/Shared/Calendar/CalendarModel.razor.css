@@ -1,0 +1,48 @@
+﻿.header {
+    text-align: center;
+    width: 14%;
+}
+
+.number {
+    border-right: solid 1px #f00;
+    word-wrap: break-word;
+    text-align: center;
+}
+
+.smallNumber {
+    color: darkslateblue;
+    vertical-align: text-top;
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid darkslateblue;
+}
+
+.largeNumber {
+    color: darkslateblue;
+    text-align: center;
+    font-size: 92px;
+}
+
+
+.week {
+    height: 160px;
+}
+
+table {
+    table-layout: fixed;
+}
+
+.container {
+    position: relative;
+    vertical-align: top;
+}
+
+.containerbackground {
+    position: absolute;
+    text-align: right;
+    vertical-align: bottom;
+    z-index: -1;
+    color: darkblue;
+    font-size: 76px;
+}

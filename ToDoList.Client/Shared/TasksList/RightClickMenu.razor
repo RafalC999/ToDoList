@@ -1,0 +1,39 @@
+﻿@using ToDoList.Client.Services.Interfaces;
+@using TodoList.DAL.Entities;
+
+<span>
+    <ContextMenu Id="myMenu">
+        <Item OnClick=@EditSubtaskClick>Edit</Item>
+        <Seperator />
+        <Item OnClick=@DeleteClick>Delete</Item>
+    </ContextMenu>
+</span>
+@code {
+    [Inject]
+    private IToDoService toDoService { get; set; }
+    [Parameter]
+    public Dictionary<Guid, BSInputCheckbox<bool>> subtaskReferences { get; set; }
+    [Parameter]
+    public EventCallback Reload { get; set; }
+
+    void OnClick(ItemClickEventArgs e)
+    {
+        Console.WriteLine($"Item Clicked => Menu: {e.ContextMenuId}, MenuTarget: {e.ContextMenuTargetId}, IsCanceled: {e.IsCanceled}, MenuItem: {e.MenuItemElement}, MouseEvent: {e.MouseEvent}, DataID: {e.Data}");
+    }
+    private void EditSubtaskClick(ItemClickEventArgs e)
+    {
+        var currentSubtask = e.Data as SubTask;
+
+        subtaskReferences[currentSubtask.Id].IsReadonly = true;
+        Reload.InvokeAsync();
+    }
+
+    async void DeleteClick(ItemClickEventArgs e)
+    {
+        var currentSubtask = e.Data as SubTask;
+        await toDoService.OnDeleteSubtask(currentSubtask!);
+        await Reload.InvokeAsync();
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+}
