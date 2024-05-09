@@ -1,0 +1,77 @@
+﻿@page "/tasksList"
+@using BlazorStrap;
+@using ToDoList.Client.Services;
+@using ToDoList.Client.Services.Interfaces;
+@using ToDoList.Client.Shared.GrabAndDrop
+@using ToDoList.Client.Shared.TasksList
+@using TodoList.DAL.Entities;
+<h2 style="text-align:center">Select task</h2>
+<BSContainer style="margin-bottom:50px;">
+    <BSInput InputType="InputType.Select" @bind-Value="selectedTask">
+        <option value="null"> <b></b> </option>
+        @foreach (var task in Tasks)
+        {
+            <option value="@task.Id">@task.Name</option>
+        }
+    </BSInput>
+</BSContainer>
+
+<JobsContainer Jobs="Jobs" OnStatusUpdated="HandleStatusUpdated">
+    <JobList Style="ToDo" ListStatus="SubtaskStatus.ToDo" AllowedStatuses="@(new SubtaskStatus[] { SubtaskStatus.InProgress })" />
+    <JobList Style="InProgress" ListStatus="SubtaskStatus.InProgress" AllowedStatuses="@(new SubtaskStatus[] { SubtaskStatus.ToDo, SubtaskStatus.Completed })" />
+    <JobList Style="Completed" ListStatus="SubtaskStatus.Completed" AllowedStatuses="@(new SubtaskStatus[] { SubtaskStatus.InProgress })" />
+</JobsContainer>
+@if (selectedTask != null && selectedTask != Guid.Parse("00000000-0000-0000-0000-000000000000"))
+{
+    <TaskProgress selectedTask="Tasks.FirstOrDefault(x => x.Id == _selectedTask)" />
+}
+<hr />
+<p>Last updated job was: <strong>@lastUpdatedJob</strong></p>
+<hr />
+@foreach (var task in Jobs)
+{
+    <p>@task.Name - <strong>@task.Status</strong></p>
+}
+
+@code {
+    [Inject] private IToDoService toDoService { get; set; }
+    List<SubTask> Jobs = new List<SubTask>();
+    List<UserTask> Tasks = new List<UserTask>();
+    string lastUpdatedJob = "";
+    private Guid? _selectedTask;
+    private Guid? selectedTask
+    {
+        get { return _selectedTask; }
+        set
+        {
+            _selectedTask = value;
+            ChooseTask();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Tasks = await toDoService.GetTaskListAsync();
+    }
+
+    private void ChooseTask()
+    {
+        if (selectedTask == Guid.Parse("00000000-0000-0000-0000-000000000000"))
+        {
+            Jobs.Clear();
+            return;
+        }
+
+        if (selectedTask != null)
+        {
+            Jobs = Tasks.FirstOrDefault(i => i.Id == selectedTask)!.SubTasks.ToList();
+            StateHasChanged();
+        }
+    }
+
+    void HandleStatusUpdated(SubTask updatedJob)
+    {
+        lastUpdatedJob = updatedJob.Name;
+    }
+
+}

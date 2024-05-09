@@ -1,0 +1,301 @@
+﻿@page "/taskTEST"
+@attribute [Authorize]
+@using BlazorStrap
+@using Microsoft.AspNetCore.Mvc;
+@using Microsoft.EntityFrameworkCore;
+@using System.ComponentModel.DataAnnotations;
+@using ToDoList.Client.Shared.TasksList
+@using TodoList.DAL.Entities;
+@using TodoList.DAL;
+
+
+@inject IJSRuntime JSRuntime
+@inject TodoDbContext DbContext
+@inject HttpClient httpClient
+<BSButton MarginTop="Margins.None" Class="btn btn-success float-sm-end m-1" Target="offCanvasTask">Dodaj zadanie</BSButton>
+<h1>Zadania</h1>
+
+
+
+<div class="row">
+    @if (UserTasks.Any())
+    {
+        @foreach (var task in UserTasks)
+        {
+            <div>
+                <BSAccordion>
+                    <BSAccordionItem DefaultShown=false>
+                        <Header>
+                            <div Class="input-group">
+                                <span class="input-group-sm">
+                                    <h3>@task.Name</h3>
+                                </span>
+                                @* <h4 style="float:right">@DateValue</h4> *@
+                            </div>
+                            <span class="float-sm-end" style="margin-right:20px">
+                                <h5>Termin:</h5>
+                                <h6>@DateValue</h6>
+                            </span>
+                            <span class="float-sm-end" style="margin-right:20px">
+                                <h5 style="width:150px">Dodane przez:</h5>
+                                <h6>Raf</h6>
+                            </span>
+                        </Header>
+                        <Content>
+                            <h5 style="margin-top:8px;margin-bottom:20px">@task.Name</h5>
+
+                            @foreach (var subtask in task.SubTasks.OrderBy(o => o.Order))
+                            {
+
+                                <div Class="input-group" style="margin-bottom:5px">
+
+                                    <BSInputCheckbox MarginTop="Margins.Small" @ref="subtaskReferences[subtask.Id]" CheckedValue="true" @bind-Value="subtask.IsDone" @onchange="@(() =>{SubtaskDone(subtask);})"
+                                                     IsDisabled="subtask.IsDone" MarginLeftAndRight="Margins.Medium" />
+                                    <BSLabel IsCheckLabel="true" IsColumn="true">
+                                        <BSCol>
+                                            <ContextMenuTrigger MenuId="myMenu" Data="subtask">
+                                                <BSForm Model="InputSubtask" DataId="SubtaskInputyy" OnValidSubmit=@(() => {EditSubtask(subtask);})>
+                                                    <BSInput @ref="subtaskInputReferences[subtask.Id]"
+                                                             InputType="InputType.Text" @bind-Value="@subtask.Name" IsPlainText=true IsDisabled=subtask.IsDone
+                                                             IsReadonly=!subtaskReferences[subtask.Id].IsReadonly class="form-control-sm"
+                                                    @onblur=@(() => {EditSubtask(subtask);}) />
+                                                </BSForm>
+                                            </ContextMenuTrigger>
+                                        </BSCol>
+                                    </BSLabel>
+
+                                    <span class="subtaskButton">
+                                        <BSButton IsOutlined="true" Color="BSColor.Primary" class="oi oi-arrow-thick-top" @onclick="(()=> {Up(task, subtask);})"></BSButton>
+                                    </span>
+                                    <span class="subtaskButton">
+                                        <BSButton IsOutlined="true" Color="BSColor.Secondary" class="oi oi-arrow-thick-bottom" @onclick="(()=> {Down(task, subtask);})"></BSButton>
+                                    </span>
+
+                                    <span class="input-group-sm subtaskButton">
+                                        <BSButton IsOutlined="true" Color="BSColor.Warning" DataId="popoverLeft" @onclick="(()=> {Index(task, subtask);})">Info</BSButton>
+                                        <BSPopover Placement="Placement.Left" Target="popoverLeft">
+                                            <Header>Informacje</Header>
+                                            <Content>To the left</Content>
+                                        </BSPopover>
+                                    </span>
+                                </div>
+                            }
+
+                            <div Class="input-group" style="margin-top:20px; margin-bottom:20px; height:10px">
+                                <BSInput InputType="InputType.Text" placeholder="Nowe zadanie" @bind-Value="@InputSubtask.Name" class="form-control-sm" />
+                                <span class="input-group-sm">
+                                    <BSInput InputType="InputType.Date" @bind-Value="DateValue" style="width:auto" />
+                                </span>
+                                <span class="input-group-sm">
+                                    <BSButton @onclick="(()=> {PostSubtaskClick(task,InputSubtask);})" class="btn btn-primary">Dodaj</BSButton>
+                                </span>
+                            </div>
+
+                        </Content>
+                    </BSAccordionItem>
+                </BSAccordion>
+            </div>
+        }
+    }
+    else if (UserTasks == null)
+    {
+        <p>No tasks available</p>
+    }
+    else
+    {
+        <div style="position:fixed; top:50%; left:50%;">
+            <BSSpinner Color="BSColor.Primary" Size="Size.ExtraExtraLarge" />
+        </div>
+    }
+</div>
+
+<span>
+    <ContextMenu Id="myMenu">
+        <Item OnClick=@EditSubtaskClick>Edytuj</Item>
+        <Item OnClick=@DeleteClick>Usuń</Item>
+        <Seperator />
+        <Item>
+            Przenieś
+            <SubMenu>
+                <Item OnClick="@OnClick">do góry</Item>
+                <Item OnClick="@OnClick">do dołu</Item>
+                <Item OnClick="@OnClick">na początek</Item>
+                <Item OnClick="@OnClick">na koniec</Item>
+            </SubMenu>
+        </Item>
+    </ContextMenu>
+</span>
+
+<BSOffCanvas @ref="refCanvasTask" DataId="offCanvasTask" Placement="Placement.Bottom">
+    <Header>Nowe zadanie</Header>
+    <Content>
+        <BSForm Model="InputTask" OnValidSubmit="@(() => {PostTaskClick(InputTask);})">
+            <div class="mb-1">
+                <BSInput InputType="InputType.Text" @bind-Value="InputTask.Name" placeholder="Nazwa" />
+            </div>
+            <div class="mb-1">
+                <BSButton Target="offCanvasTask">Anuluj</BSButton>
+                <BSButton IsSubmit="true" Color="BSColor.Primary">Zapisz</BSButton>
+            </div>
+        </BSForm>
+    </Content>
+</BSOffCanvas>
+
+<span>
+    <BSModal DataId="modal1" @ref=confirmBox>
+        <Header>Modal Title</Header>
+        <Content>Woohoo, you're reading this text in a modal!</Content>
+        <Footer Context="modal">
+            <BSButton MarginStart="Margins.Auto" Color="BSColor.Secondary" @onclick="modal.HideAsync">Close</BSButton>
+            <BSButton Color="BSColor.Primary" Target="SubtaskInputyy" IsSubmit="true">Save changes</BSButton>
+        </Footer>
+    </BSModal>
+</span>
+
+
+@code {
+    private DateOnly DateValue { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+    private Dictionary<Guid, BSInputCheckbox<bool>> subtaskReferences = new Dictionary<Guid, BSInputCheckbox<bool>>();
+    private Dictionary<Guid, BSInput<string>> subtaskInputReferences = new Dictionary<Guid, BSInput<string>>();
+
+    [BindProperty]
+    public UserTask InputTask { get; set; } = new UserTask();
+    [BindProperty]
+    public SubTask InputSubtask { get; set; } = new SubTask();
+
+    BSModal confirmBox;
+    BSOffCanvas? refCanvasTask;
+
+
+
+
+
+    private async Task SubtaskDone(SubTask subtask)
+    {
+        if (subtask.IsDone)
+        {
+            subtaskInputReferences[subtask.Id].IsDisabled = true;
+            subtask.IsDone = true;
+
+            await toDoService.OnEditSubtask(subtask);
+            OnEditSubtask(subtask);
+        }
+    }
+
+    void OnClick(ItemClickEventArgs e)
+    {
+        Console.WriteLine($"Item Clicked => Menu: {e.ContextMenuId}, MenuTarget: {e.ContextMenuTargetId}, IsCanceled: {e.IsCanceled}, MenuItem: {e.MenuItemElement}, MouseEvent: {e.MouseEvent}, DataID: {e.Data}");
+    }
+
+    //
+    private async Task EditSubtaskClick(ItemClickEventArgs e)
+    {
+        var currentSubtask = e.Data as SubTask;
+
+        subtaskReferences[currentSubtask.Id].IsReadonly = true;
+    }
+
+    //
+    private async Task EditSubtask(SubTask subtask)
+    {
+        if (!subtaskInputReferences[subtask.Id].IsReadonly)
+        {
+            //confirmBox.ShowAsync();
+            subtask.Name = subtaskInputReferences[subtask.Id].Value;
+            //OnEditSubtask(subtask);
+            await toDoService.OnEditSubtask(subtask);
+            subtaskReferences[subtask.Id].IsReadonly = false;
+        }
+    }
+
+
+    private async Task PostTaskClick(UserTask request)
+    {
+        await toDoService.OnPostTask(request);
+        await OnInitializedAsync();
+        InputTask.Name = string.Empty;
+        StateHasChanged();
+        await Close();
+
+    }
+
+    private async Task PostSubtaskClick(UserTask request, SubTask inputSubtask)
+    {
+        await toDoService.OnPostSubtask(request, inputSubtask);
+        await OnInitializedAsync();
+        InputSubtask.Name = string.Empty;
+        StateHasChanged();
+    }
+
+    async void DeleteClick(ItemClickEventArgs e)
+    {
+        var currentSubtask = e.Data as SubTask;
+        await toDoService.OnDeleteSubtask(currentSubtask!);
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+
+    private async Task Close()
+    {
+        if (refCanvasTask != null)
+        {
+            await refCanvasTask.HideAsync();
+        }
+    }
+
+    private async Task Up(UserTask task, SubTask subTask)
+    {
+        int currentItemIndex = subTask.Order;
+        var nextItem = task.SubTasks.OrderBy(o => o.Order).TakeWhile(x => x.Order < currentItemIndex).Last();
+        var test = task.SubTasks;
+        if (nextItem != null)
+        {
+            int differenceIndex = currentItemIndex - nextItem.Order;
+            if (differenceIndex == 1)
+            {
+                nextItem.Order++;
+                subTask.Order--;
+            }
+            else
+            {
+                subTask.Order -= differenceIndex;
+                nextItem.Order = subTask.Order + 1;
+            };
+            OnEditSubtask(subTask);
+            OnEditSubtask(nextItem);
+        }
+    }
+
+    private async Task Down(UserTask task, SubTask subTask)
+    {
+        int currentItemIndex = subTask.Order;
+        var PreviousItem = task.SubTasks.OrderByDescending(d => d.Order).TakeWhile(x => x.Order > currentItemIndex).OrderBy(a => a.Order).First();
+        var test = task.SubTasks;
+        if (PreviousItem != null)
+        {
+            int differenceIndex = PreviousItem.Order - currentItemIndex;
+            if (differenceIndex == 1)
+            {
+                PreviousItem.Order--;
+                subTask.Order++;
+            }
+            else
+            {
+                subTask.Order += differenceIndex;
+                PreviousItem.Order = subTask.Order - 1;
+            };
+            OnEditSubtask(subTask);
+            OnEditSubtask(PreviousItem);
+        }
+    }
+
+    private async Task Index(UserTask task, SubTask subTask)
+    {
+        var currentIndex = subTask.Order;
+        Console.WriteLine(currentIndex);
+    }
+
+}
+

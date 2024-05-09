@@ -1,0 +1,99 @@
+﻿@page "/tasks"
+@using BlazorStrap
+@using Microsoft.AspNetCore.Mvc;
+@using Microsoft.EntityFrameworkCore;
+@using System.ComponentModel.DataAnnotations;
+@using ToDoList.Client.Shared.TasksList
+@using TodoList.DAL.Entities;
+@using TodoList.DAL;
+
+
+@inject IJSRuntime JSRuntime
+@inject TodoDbContext DbContext
+@inject HttpClient httpClient
+<AddTask Reload="RefreshData"></AddTask>
+<h1>Tasks</h1>
+
+<div class="row">
+
+    @if (UserTasks.Any())
+    {
+        @foreach (var task in UserTasks)
+        {
+            <div>
+                <BSAccordion>
+                    <BSAccordionItem DefaultShown=false>
+                        <Header>
+                            <TaskModel task="task" Reload="RefreshData" />
+                        </Header>
+                        <Content>
+
+                            <h5 style="margin-top:8px;margin-bottom:20px">@task.Name</h5>
+
+                            <BSTable IsStriped="false">
+                                <BSTHead>
+                                    <BSTR>
+                                        <BSTD style="width:0.5em">#</BSTD>
+                                        <BSTD style="width:0.5em">Done</BSTD>
+                                        <BSTD>Name</BSTD>
+                                        <BSTD style="width:6em; text-align:center">Deadline</BSTD>
+                                        <BSTD style="width:7.1em; text-align:center">Order</BSTD>
+                                        <BSTD style="width:3em; text-align:center">Info</BSTD>
+                                    </BSTR>
+                                </BSTHead>
+
+                                <BSTBody>
+
+                                    @foreach (var subtask in task.SubTasks.OrderBy(o => o.Order))
+                                    {
+
+                                        <SubtaskModel task="task" subtask="subtask" InputTask="InputTask" InputSubtask="InputSubtask"
+                                                      subtaskInputReferences="subtaskInputReferences" subtaskReferences="subtaskReferences"
+                                                      Reload="RefreshData"></SubtaskModel>
+
+                                    }
+                                </BSTBody>
+                            </BSTable>
+                            <AddSubtask taskValue="task" parentFunction="RefreshData"></AddSubtask>
+                        </Content>
+                    </BSAccordionItem>
+                </BSAccordion>
+            </div>
+        }
+        <TaskContainer />
+    }
+    else if (UserTasks == null)
+    {
+        <p>No tasks available</p>
+    }
+    else
+    {
+        <div style="position:fixed; top:50%; left:55%;">
+            <BSSpinner Color="BSColor.Primary" Size="Size.ExtraExtraLarge" />
+        </div>
+    }
+
+</div>
+
+<RightClickMenu subtaskReferences="subtaskReferences" Reload="RefreshData"></RightClickMenu>
+
+@code {
+    List<UserTask> UserTasks = new();
+    private DateOnly DateValue { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+    private Dictionary<Guid, BSInputCheckbox<bool>> subtaskReferences = new Dictionary<Guid, BSInputCheckbox<bool>>();
+    private Dictionary<Guid, BSInput<string>> subtaskInputReferences = new Dictionary<Guid, BSInput<string>>();
+
+
+    [BindProperty]
+    public UserTask InputTask { get; set; } = new UserTask();
+    [BindProperty]
+    public SubTask InputSubtask { get; set; } = new SubTask();
+
+
+    private async void RefreshData()
+    {
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+}
+
