@@ -8,11 +8,11 @@ Welcome to the documentation for the ToDoList app, developed using C# and Blazor
 <img src="https://github.com/RafalC999/ToDoList/assets/145366939/4779434c-4177-4d73-8557-fdfdc620a3c3" width="400">
 <img src="https://github.com/RafalC999/ToDoList/assets/145366939/8c744831-ccce-4725-8d90-5d07565f7b22" width="400">
 
-<img src="https://github.com/RafalC999/ToDoList/assets/145366939/e8d64ed7-a933-4ca0-98bc-69ae3ae84a39" width="500">
-<img src="https://github.com/RafalC999/ToDoList/assets/145366939/9449f36b-ee1d-4f83-892f-cca51541c86c" width="500">
+<img src="https://github.com/RafalC999/ToDoList/assets/145366939/e8d64ed7-a933-4ca0-98bc-69ae3ae84a39" >
+<img src="https://github.com/RafalC999/ToDoList/assets/145366939/9449f36b-ee1d-4f83-892f-cca51541c86c" >
 
-<img src="https://github.com/RafalC999/ToDoList/assets/145366939/5e31f06c-9e1c-4659-9775-b52e25a88a06" width="500">
-<img src="https://github.com/RafalC999/ToDoList/assets/145366939/1d272045-4997-4ee7-b11d-80195bd2ecfd" width="500">
+<img src="https://github.com/RafalC999/ToDoList/assets/145366939/5e31f06c-9e1c-4659-9775-b52e25a88a06" >
+<img src="https://github.com/RafalC999/ToDoList/assets/145366939/1d272045-4997-4ee7-b11d-80195bd2ecfd" >
 
 <img src="https://github.com/RafalC999/ToDoList/assets/145366939/a73e5091-4566-4971-ac80-0b2afc53b436" >
 
